@@ -1,0 +1,58 @@
+# install grafana
+wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add -
+echo "deb https://packages.grafana.com/oss/deb stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
+apt update && apt install grafana -y
+systemctl enable --now grafana-server.service
+
+
+
+# install nginx as reverse proxy
+apt install nginx -y
+cd /etc/nginx/sites-enabled
+nano YOUR-DOMAIN-NAME.conf
+server {
+    listen 80;
+    listen [::]:80;
+    server_name  YOUR-DOMAIN-NAME;
+
+    location / {
+        proxy_pass           http://localhost:3000/;
+    }
+}
+service nginx restart
+
+# add SSL to grafana
+apt install certbot python3-certbot-nginx -y
+certbot --nginx
+
+# login to grafana and change password: https://YOU-DOMAIN-NAME  (admin/admin)
+
+
+
+# install influxdb (install 1.8 only!!!)
+wget -qO- https://repos.influxdata.com/influxdb.key | sudo apt-key add -
+source /etc/lsb-release
+echo "deb https://repos.influxdata.com/${DISTRIB_ID,,} ${DISTRIB_CODENAME} stable" | sudo tee /etc/apt/sources.list.d/influxdb.list
+apt update && apt install influxdb -y
+systemctl enable --now influxdb
+
+
+
+influx
+create database telegraf
+create user grafana with password 'password'
+create user telegraf with password 'password'
+grant READ on telegraf to grafana
+grant ALL on telegraf to telegraf
+show users
+quit
+
+# add data source to grafana
+
+
+# install telegraf
+apt install telegraf -y
+systemctl enable --now telegraf
+
+
+https://grafana.com/grafana/dashboards/11116
